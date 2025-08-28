@@ -31,11 +31,15 @@ This project is being actively developed and will include:
 🔄 **Current Status:** Initial Development Phase  
 📈 **Progress:** Setting up foundation and core architecture
 
-## 👨‍💻 Developer
+## 👨‍💻 Authors
 
 **Héctor Soto** - [@hector17rock](https://github.com/hector17rock)  
 🎓 Full Stack Developer  
 💻 Building the future, one commit at a time
+
+**Alejandro Garcia** - [@GerAle30](https://github.com/GerAle30)  
+🧙 Full Stack Developer  
+🚀 Passionate about innovative solutions
 
 ---
 
