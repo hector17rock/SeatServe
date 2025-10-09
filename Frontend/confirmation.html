@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Images/seatserve-app-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Confirmation - SeatServe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-white text-neutral-900 relative">
+    <!-- Index Wallpaper Background -->
+    <div 
+      class="fixed inset-0 pointer-events-none opacity-50"
+      style="
+        background-image: url('/Images/index-wallpaper.png');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        z-index: 1;
+      "
+    ></div>
+    <!-- Header -->
+    <header class="sticky top-0 z-20 backdrop-blur bg-white/70 border-b border-neutral-300">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-12 w-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+            <img src="/Images/seatserve-app-icon.png" alt="SeatServe Logo" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="text-xl font-semibold">SeatServe</div>
+            <div class="text-xs text-neutral-500">Order from your seat or pick up fast</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div class="text-sm text-neutral-600">
+              Welcome, <span class="font-medium" id="userName">Guest User</span>
+            </div>
+            <button
+              onclick="logout()"
+              class="px-3 py-1.5 rounded-lg text-sm bg-emerald-300 text-neutral-900 border border-emerald-300 hover:bg-emerald-400 hover:border-emerald-400 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-4xl px-4 py-8 relative z-10">
+      <!-- Success Icon and Title -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-emerald-100 mb-4">
+          <svg class="h-10 w-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-neutral-900 mb-2">Order Confirmed!</h1>
+        <p class="text-neutral-600">Thank you for your order. We'll get it ready for you.</p>
+      </div>
+
+      <!-- Order Details Card -->
+      <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden shadow-sm">
+        <!-- Order Header -->
+        <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-300">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-neutral-900">Order Details</h2>
+              <div class="text-sm text-neutral-500">
+                <span id="orderNumber">Loading...</span> • <span id="orderTime">Loading...</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-neutral-600" id="concessionName">Loading...</div>
+              <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" id="orderStatus">
+                <span class="w-2 h-2 rounded-full mr-2" id="statusDot"></span>
+                <span id="statusText">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="px-6 py-4">
+          <h3 class="font-semibold mb-4">Items Ordered</h3>
+          <div class="space-y-3" id="orderItems">
+            <!-- Items will be populated by JavaScript -->
+            <div class="text-center py-8 text-neutral-500">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mx-auto mb-2"></div>
+              Loading order details...
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-neutral-50 px-6 py-4 border-t border-neutral-300">
+          <div class="flex items-center justify-between">
+            <div class="text-lg font-semibold text-neutral-900">Total</div>
+            <div class="text-xl font-bold text-neutral-900" id="orderTotal">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Fulfillment Details -->
+        <div class="px-6 py-4 border-t border-neutral-300">
+          <h3 class="font-semibold mb-2">Fulfillment</h3>
+          <div class="text-sm text-neutral-600" id="fulfillmentDetails">Loading...</div>
+          <div class="text-sm text-neutral-500 mt-1" id="orderNote" style="display: none;">
+            <strong>Note:</strong> <span id="noteText"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-8 flex items-center justify-center gap-4">
+        <button
+          onclick="trackOrder()"
+          class="px-6 py-3 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition"
+        >
+          Track Your Order
+        </button>
+        <button
+          onclick="orderMore()"
+          class="px-6 py-3 rounded-xl border border-neutral-300 hover:border-neutral-500 text-neutral-700 font-medium transition"
+        >
+          Order More Items
+        </button>
+      </div>
+
+      <!-- Estimated Time -->
+      <div class="mt-6 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200">
+          <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span class="text-sm text-blue-800">
+            <strong>Estimated ready time:</strong> <span id="estimatedTime">10-15 minutes</span>
+          </span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-6xl px-4 pb-10 pt-8 text-xs text-neutral-500">
+      <div class="text-center">Your order confirmation • Keep this page for reference</div>
+    </footer>
+
+    <script>
+      // Currency formatting function
+      function currency(n) {
+        return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+      }
+
+      // Set user name from localStorage
+      document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('seatserve_user') || 'Guest User';
+        document.getElementById('userName').textContent = userName;
+
+        // Load order details from localStorage or URL params
+        loadOrderDetails();
+      });
+
+      function loadOrderDetails() {
+        // Try to get order details from localStorage (most recent order)
+        const orderData = localStorage.getItem('latest_order');
+        
+        if (orderData) {
+          const order = JSON.parse(orderData);
+          displayOrderDetails(order);
+        } else {
+          // Fallback - show error message
+          document.getElementById('orderItems').innerHTML = `
+            <div class="text-center py-8 text-red-500">
+              <p>No order details found.</p>
+              <p class="text-sm text-neutral-500 mt-2">You may have been redirected here by mistake.</p>
+            </div>
+          `;
+        }
+      }
+
+      function displayOrderDetails(order) {
+        // Order header info
+        document.getElementById('orderNumber').textContent = order.id;
+        document.getElementById('orderTime').textContent = new Date(order.createdAt).toLocaleTimeString();
+        document.getElementById('concessionName').textContent = order.concession || 'SeatServe';
+        
+        // Order status
+        const statusElement = document.getElementById('orderStatus');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        
+        statusText.textContent = order.status;
+        
+        // Style based on status
+        if (order.status === 'Queued') {
+          statusElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-neutral-200 text-neutral-800';
+          statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-neutral-400';
+        } else if (order.status === 'Preparing') {
+          statusElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-200 text-yellow-800';
+          statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-yellow-500';
+        } else if (order.status === 'Ready') {
+          statusElement.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-200 text-emerald-800';
+          statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-emerald-500';
+        }
+
+        // Order items
+        const itemsHtml = order.items.map(item => `
+          <div class="flex items-center justify-between py-2">
+            <div class="flex items-center gap-3">
+              <div class="text-neutral-700 font-medium">${item.name}</div>
+              <div class="text-sm text-neutral-500">× ${item.qty}</div>
+            </div>
+            <div class="font-medium">${currency(item.price * item.qty)}</div>
+          </div>
+        `).join('');
+        
+        document.getElementById('orderItems').innerHTML = itemsHtml;
+
+        // Order total
+        document.getElementById('orderTotal').textContent = currency(order.total);
+
+        // Fulfillment details
+        const fulfillmentText = order.fulfillment === 'Pickup' 
+          ? 'Pickup at counter when ready'
+          : `Seat delivery to: ${order.seat}`;
+        document.getElementById('fulfillmentDetails').textContent = fulfillmentText;
+
+        // Order note if exists
+        if (order.note) {
+          document.getElementById('orderNote').style.display = 'block';
+          document.getElementById('noteText').textContent = order.note;
+        }
+
+        // Set estimated time based on number of items
+        const itemCount = order.items.reduce((sum, item) => sum + item.qty, 0);
+        const estimatedMinutes = Math.max(10, Math.min(25, itemCount * 3));
+        document.getElementById('estimatedTime').textContent = `${estimatedMinutes-5}-${estimatedMinutes} minutes`;
+      }
+
+      // Action functions
+      function trackOrder() {
+        // Go back to the menu in concession view to track order
+        const concessionId = localStorage.getItem('selected_concession_id');
+        let menuUrl = '/menu1.html';
+        
+        if (concessionId === 'napoli-pizza') {
+          menuUrl = '/menu2.html';
+        } else if (concessionId === 'snacks-palace') {
+          menuUrl = '/menu3.html';
+        } else if (concessionId === 'brewline-coffee') {
+          menuUrl = '/menu4.html';
+        } else if (concessionId === 'sweet-scoops') {
+          menuUrl = '/menu5.html';
+        }
+        
+        // Add a flag to switch to concession tab
+        localStorage.setItem('switch_to_concession', 'true');
+        window.location.href = menuUrl;
+      }
+
+      function orderMore() {
+        // Go back to the same menu
+        const concessionId = localStorage.getItem('selected_concession_id');
+        let menuUrl = '/menu1.html';
+        
+        if (concessionId === 'napoli-pizza') {
+          menuUrl = '/menu2.html';
+        } else if (concessionId === 'snacks-palace') {
+          menuUrl = '/menu3.html';
+        } else if (concessionId === 'brewline-coffee') {
+          menuUrl = '/menu4.html';
+        } else if (concessionId === 'sweet-scoops') {
+          menuUrl = '/menu5.html';
+        }
+        
+        window.location.href = menuUrl;
+      }
+
+      // Logout function
+      function logout() {
+        localStorage.removeItem('seatserve_logged_in');
+        localStorage.removeItem('seatserve_user');
+        localStorage.removeItem('selected_concession_id');
+        localStorage.removeItem('selected_concession_name');
+        localStorage.removeItem('latest_order');
+        window.location.href = '/';
+      }
+
+      // Check if user is logged in
+      if (!localStorage.getItem('seatserve_logged_in')) {
+        window.location.href = '/';
+      }
+    </script>
+  </body>
+</html>

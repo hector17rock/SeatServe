@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Images/seatserve-app-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SeatServe - Choose Your Concession</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-white text-neutral-900 relative">
+    <!-- Index Wallpaper Background -->
+    <div 
+      class="fixed inset-0 pointer-events-none opacity-50"
+      style="
+        background-image: url('/Images/index-wallpaper.png');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        z-index: 1;
+      "
+    ></div>
+    <!-- Header -->
+    <header class="sticky top-0 z-20 backdrop-blur bg-white/70 border-b border-neutral-300">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-12 w-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+            <img src="/Images/seatserve-app-icon.png" alt="SeatServe Logo" class="w-full h-full object-cover" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+            <span class="text-neutral-900 font-bold text-lg" style="display:none;">SS</span>
+          </div>
+          <div>
+            <div class="text-xl font-semibold">SeatServe</div>
+            <div class="text-xs text-neutral-500">Order from your seat or pick up fast</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div class="text-sm text-neutral-600">
+              Welcome, <span class="font-medium" id="userName">Guest User</span>
+            </div>
+            <button
+              onclick="logout()"
+              class="px-3 py-1.5 rounded-lg text-sm bg-emerald-300 text-neutral-900 border border-emerald-300 hover:bg-emerald-400 hover:border-emerald-400 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-6xl px-4 py-6 relative z-10">
+      <!-- Page Title -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-neutral-900 mb-2">Choose Your Concession</h1>
+        <p class="text-neutral-600">Select from our variety of food vendors</p>
+      </div>
+
+      <!-- Concessions Grid -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <!-- Speedee Burgers -->
+        <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200" onclick="selectConcession('speedee-burgers', 'Speedee Burgers')">
+          <div class="flex justify-center p-6 pt-8">
+            <div class="h-32 w-32 flex items-center justify-center">
+              <img src="/Images/speedee-burgers-logo.png" alt="Speedee Burgers Logo" class="w-full h-full object-contain"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+              <div class="w-full h-full rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-xs" style="display:none;">
+                <div class="text-center">
+                  <div>⚡</div>
+                  <div class="text-[8px]">SPEEDEE</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 pt-2 flex-1 flex flex-col text-center">
+            <h3 class="font-semibold tracking-tight text-lg mb-1">Speedee Burgers</h3>
+            <p class="text-xs text-neutral-500 mb-4">Classic burgers & fries</p>
+            <button class="mt-auto px-4 py-2 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition">
+              Order Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Napoli Pizza -->
+        <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200" onclick="selectConcession('napoli-pizza', 'Napoli Pizza')">
+          <div class="flex justify-center p-6 pt-8">
+            <div class="h-32 w-32 flex items-center justify-center">
+              <img src="/Images/napoli-pizza-logo.png" alt="Napoli Pizza Logo" class="w-full h-full object-contain">
+            </div>
+          </div>
+          <div class="p-4 pt-2 flex-1 flex flex-col text-center">
+            <h3 class="font-semibold tracking-tight text-lg mb-1">Napoli Pizza</h3>
+            <p class="text-xs text-neutral-500 mb-4">Authentic Italian pizza</p>
+            <button class="mt-auto px-4 py-2 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition">
+              Order Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Snacks Palace -->
+        <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200" onclick="selectConcession('snacks-palace', 'Snacks Palace')">
+          <div class="flex justify-center p-6 pt-8">
+            <div class="h-32 w-32 flex items-center justify-center">
+              <img src="/Images/snack-palace-logo.png" alt="Snack Palace Logo" class="w-full h-full object-contain">
+            </div>
+          </div>
+          <div class="p-4 pt-2 flex-1 flex flex-col text-center">
+            <h3 class="font-semibold tracking-tight text-lg mb-1">Snacks Palace</h3>
+            <p class="text-xs text-neutral-500 mb-4">Popcorn, nachos & more</p>
+            <button class="mt-auto px-4 py-2 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition">
+              Order Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Brewline Coffee Co. -->
+        <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200" onclick="selectConcession('brewline-coffee', 'Brewline Coffee Co.')">
+          <div class="flex justify-center p-6 pt-8">
+            <div class="h-32 w-32 flex items-center justify-center">
+              <img src="/Images/brewline-coffee-logo.png" alt="Brewline Coffee Co Logo" class="w-full h-full object-contain">
+            </div>
+          </div>
+          <div class="p-4 pt-2 flex-1 flex flex-col text-center">
+            <h3 class="font-semibold tracking-tight text-lg mb-1">Brewline Coffee Co.</h3>
+            <p class="text-xs text-neutral-500 mb-4">Premium coffee & drinks</p>
+            <button class="mt-auto px-4 py-2 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition">
+              Order Now
+            </button>
+          </div>
+        </div>
+
+        <!-- Sweet Scoops -->
+        <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-200" onclick="selectConcession('sweet-scoops', 'Sweet Scoops')">
+          <div class="flex justify-center p-6 pt-8">
+            <div class="h-32 w-32 flex items-center justify-center">
+              <img src="/Images/sweet-scoops-logo.png" alt="Sweet Scoops Logo" class="w-full h-full object-contain">
+            </div>
+          </div>
+          <div class="p-4 pt-2 flex-1 flex flex-col text-center">
+            <h3 class="font-semibold tracking-tight text-lg mb-1">Sweet Scoops</h3>
+            <p class="text-xs text-neutral-500 mb-4">Ice cream & desserts</p>
+            <button class="mt-auto px-4 py-2 rounded-xl bg-emerald-400 text-neutral-900 font-semibold hover:brightness-95 transition">
+              Order Now
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back Button -->
+      <div class="mt-12 text-center">
+        <button 
+          onclick="goBack()"
+          class="px-6 py-3 rounded-xl border border-neutral-300 hover:border-neutral-500 text-neutral-700 font-medium transition"
+        >
+          ← Back to Login
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-6xl px-4 pb-10 pt-8 text-xs text-neutral-500">
+      <div class="text-center">Demo MVP • Choose your favorite concession to start ordering</div>
+    </footer>
+
+    <script>
+      // Set user name from localStorage
+      document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('seatserve_user') || 'Guest User';
+        document.getElementById('userName').textContent = userName;
+      });
+
+      // Select concession and go to menu
+      function selectConcession(concessionId, concessionName) {
+        // Store selected concession for later use
+        localStorage.setItem('selected_concession_id', concessionId);
+        localStorage.setItem('selected_concession_name', concessionName);
+        
+        // Show loading state briefly
+        event.target.innerHTML = 'Loading...';
+        event.target.disabled = true;
+        
+        // Redirect to appropriate menu based on concession
+        setTimeout(() => {
+          if (concessionId === 'napoli-pizza') {
+            window.location.href = '/menu2.html';
+          } else if (concessionId === 'snacks-palace') {
+            window.location.href = '/menu3.html';
+          } else if (concessionId === 'brewline-coffee') {
+            window.location.href = '/menu4.html';
+          } else if (concessionId === 'sweet-scoops') {
+            window.location.href = '/menu5.html';
+          } else {
+            window.location.href = '/menu1.html';
+          }
+        }, 500);
+      }
+
+      // Logout function
+      function logout() {
+        localStorage.removeItem('seatserve_logged_in');
+        localStorage.removeItem('seatserve_user');
+        localStorage.removeItem('selected_concession_id');
+        localStorage.removeItem('selected_concession_name');
+        window.location.href = '/';
+      }
+
+      // Go back function
+      function goBack() {
+        window.location.href = '/';
+      }
+
+      // Check if user is logged in
+      if (!localStorage.getItem('seatserve_logged_in')) {
+        window.location.href = '/';
+      }
+    </script>
+  </body>
+</html>
