@@ -39,8 +39,16 @@ export default function IceCreamMenuMVP() {
   const [seat, setSeat] = useState("");
   const [note, setNote] = useState("");
 
-  // Shared orders list (in-memory)
-  const [orders, setOrders] = useState(() => []);
+  // Shared orders list (persisted in localStorage)
+  const [orders, setOrders] = useState(() => {
+    const savedOrders = localStorage.getItem('seatserve_orders');
+    return savedOrders ? JSON.parse(savedOrders) : [];
+  });
+
+  // Persist orders to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('seatserve_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // ---- Dev Smoke Tests (run once in dev) ----
   useEffect(() => {

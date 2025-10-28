@@ -95,7 +95,7 @@
         <div class="mt-8 text-center">
           <p class="text-sm text-neutral-600">
             Don't have an account? 
-            <a href="#" class="text-emerald-600 hover:text-emerald-700 font-medium">
+            <a href="/signup.html" class="text-emerald-600 hover:text-emerald-700 font-medium">
               Sign up
             </a>
           </p>
@@ -108,19 +108,34 @@
       document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         
-        // Simple validation for demo
-        if (email && password) {
-          // Store login state (for demo purposes)
+        // Validation
+        if (!email || !password) {
+          alert('Please fill in all fields');
+          return;
+        }
+        
+        // Get stored accounts from localStorage
+        const accounts = JSON.parse(localStorage.getItem('seatserve_accounts') || '[]');
+        
+        // Find matching account
+        const account = accounts.find(acc => 
+          acc.email.toLowerCase() === email.toLowerCase() && 
+          acc.password === password
+        );
+        
+        if (account) {
+          // Valid credentials - store login state
           localStorage.setItem('seatserve_logged_in', 'true');
-          localStorage.setItem('seatserve_user', email);
+          localStorage.setItem('seatserve_user', account.name || account.email);
           
           // Redirect to concessions page
           window.location.href = '/concessions.html';
         } else {
-          alert('Please fill in all fields');
+          // Invalid credentials
+          alert('Invalid email or password. Please try again or sign up for a new account.');
         }
       });
       

@@ -40,8 +40,11 @@ export default function SeatServeMVP() {
   const [seat, setSeat] = useState("");
   const [note, setNote] = useState("");
 
-  // Shared orders list (in-memory)
-  const [orders, setOrders] = useState(() => []);
+  // Shared orders list (persisted in localStorage)
+  const [orders, setOrders] = useState(() => {
+    const savedOrders = localStorage.getItem('seatserve_orders');
+    return savedOrders ? JSON.parse(savedOrders) : [];
+  });
 
   // ---- Dev Smoke Tests (run once in dev) ----
   useEffect(() => {
@@ -66,6 +69,11 @@ export default function SeatServeMVP() {
       console.warn("[SeatServe] Smoke tests failed:", e);
     }
   }, []);
+
+  // Persist orders to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('seatserve_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // Check for flag to switch to order status tab (from confirmation page)
   useEffect(() => {
