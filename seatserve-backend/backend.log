@@ -1,0 +1,22 @@
+nohup: ignoring input
+/home/alejandro/SeatServe/seatserve-backend/main.py:382: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Will watch for changes in these directories: ['/home/alejandro/SeatServe/seatserve-backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [16963] using WatchFiles
+INFO:     Started server process [16966]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16966]
+🍽️ SeatServe API is starting up...
+📊 Database initialized with sample data
+🚀 Ready to serve requests!
+INFO:     Stopping reloader process [16963]

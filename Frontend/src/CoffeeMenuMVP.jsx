@@ -25,10 +25,10 @@ const STATUS_FLOW = ["Queued", "Preparing", "Ready", "Delivered"];
 
 export default function CoffeeMenuMVP() {
   const [tab, setTab] = useState("Menu Items"); // "Menu Items" | "Order Status"
-  const [user, setUser] = useState(() => {
+  const [user] = useState(() => {
     return localStorage.getItem('seatserve_user') || 'Guest User';
   });
-  const [concessionName, setConcessionName] = useState(() => {
+  const [concessionName] = useState(() => {
     return localStorage.getItem('selected_concession_name') || 'Brewline Coffee Co.';
   });
 
@@ -159,20 +159,6 @@ export default function CoffeeMenuMVP() {
     window.location.href = '/confirmation.html';
   }
 
-  function advanceStatus(orderId) {
-    setOrders((prev) =>
-      prev.map((o) => {
-        if (o.id !== orderId) return o;
-        const idx = STATUS_FLOW.indexOf(o.status);
-        const nextStatus = STATUS_FLOW[Math.min(idx + 1, STATUS_FLOW.length - 1)];
-        return { ...o, status: nextStatus };
-      })
-    );
-  }
-
-  function cancelOrder(orderId) {
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
-  }
 
   function logout() {
     localStorage.removeItem('seatserve_logged_in');
