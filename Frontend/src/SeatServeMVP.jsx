@@ -1,7 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
 
-const API_BASE_URL = "http://localhost:8000";
-
 // --- Speedee Burgers Catalog ---
 const CATALOG = [
   { id: "p1", name: "Classic Burger", price: 10.0, category: "Food", station: "Grill", image: "/Images/classic-burger.png" },
@@ -29,7 +27,7 @@ const STATUS_FLOW = ["Queued", "Preparing", "Ready", "Delivered"];
 
 export default function SeatServeMVP() {
   const [tab, setTab] = useState("Menu Items"); // "Menu Items" | "Order Status"
-  const [user] = useState(() => {
+  const [user, setUser] = useState(() => {
     return localStorage.getItem('seatserve_user') || 'Guest User';
   });
 
@@ -136,7 +134,7 @@ export default function SeatServeMVP() {
     setCart({});
   }
 
-  async function placeOrder() {
+  function placeOrder() {
     if (!cartEntries.length) return;
     if (fulfillment === "Seat Delivery" && !seat.trim()) return alert("Please enter your seat number for delivery.");
 
@@ -145,58 +143,48 @@ export default function SeatServeMVP() {
       return { id, name: item?.name || id, price: item?.price || 0, qty };
     });
 
-    const tableNumber = parseInt(fulfillment === "Seat Delivery" ? seat.trim() : "1");
-    
-    const orderData = {
-      table_number: tableNumber,
-      items: snapshot.map(it => ({ name: it.name, qty: it.qty, price: it.price })),
+    const newOrder = {
+      id: `ORD-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      items: snapshot,
       total: snapshot.reduce((s, it) => s + it.price * it.qty, 0),
-      status: "pending"
+      fulfillment,
+      seat: fulfillment === "Seat Delivery" ? seat.trim() : null,
+      note: note.trim() || null,
+      status: "Queued",
+      concession: "Speedee Burgers",
+      createdAt: new Date().toISOString(),
     };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      });
-      
-      if (!response.ok) throw new Error('Failed to create order');
-      
-      const createdOrder = await response.json();
-      console.log('Order created:', createdOrder);
-      
-      const newOrder = {
-        id: `ORD-${createdOrder.id}`,
-        items: snapshot,
-        total: orderData.total,
-        fulfillment,
-        seat: fulfillment === "Seat Delivery" ? seat.trim() : null,
-        note: note.trim() || null,
-        status: "Queued",
-        concession: "Speedee Burgers",
-        createdAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem('latest_order', JSON.stringify(newOrder));
-      setOrders((prev) => [newOrder, ...prev]);
-      clearCart();
-      setNote("");
-      if (fulfillment === "Seat Delivery") setSeat("");
-      
-      window.location.href = '/confirmation.html';
-    } catch (error) {
-      console.error('Error placing order:', error);
-      alert('Error placing order. Make sure backend is running on http://localhost:8000');
-    }
+    // Store order in localStorage and redirect to confirmation
+    localStorage.setItem('latest_order', JSON.stringify(newOrder));
+    setOrders((prev) => [newOrder, ...prev]);
+    clearCart();
+    setNote("");
+    if (fulfillment === "Seat Delivery") setSeat("");
+    
+    // Redirect to confirmation page
+    window.location.href = '/confirmation.html';
   }
 
+  function advanceStatus(orderId) {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const idx = STATUS_FLOW.indexOf(o.status);
+        const nextStatus = STATUS_FLOW[Math.min(idx + 1, STATUS_FLOW.length - 1)];
+        return { ...o, status: nextStatus };
+      })
+    );
+  }
+
+  function cancelOrder(orderId) {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+  }
 
   function logout() {
     localStorage.removeItem('seatserve_logged_in');
     localStorage.removeItem('seatserve_user');
     window.location.href = '/';
-    location.reload();
   }
 
   return (
@@ -522,7 +510,7 @@ export default function SeatServeMVP() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-neutral-500">
-        <div>Connected to backend: {API_BASE_URL}</div>
+        <div>Demo MVP • In-memory only • No backend required</div>
       </footer>
     </div>
   );
