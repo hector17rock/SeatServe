@@ -6,7 +6,7 @@ Restaurant table service management system
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
@@ -99,6 +99,15 @@ class Table(BaseModel):
     seats: int
     status: str = "available"  # available, occupied, reserved
 
+class Payment(BaseModel):
+    id: Optional[int] = None
+    order_id: int
+    amount: float
+    payment_method: str = "card"  # card, cash, paypal, etc.
+    status: str = "pending"  # pending, completed, failed
+    transaction_id: Optional[str] = None
+    timestamp: Optional[str] = None
+
 # Database initialization
 def init_db():
     """Initialize SQLite database with sample data"""
@@ -136,6 +145,20 @@ def init_db():
             number INTEGER UNIQUE NOT NULL,
             seats INTEGER NOT NULL,
             status TEXT DEFAULT 'available'
+        )
+    ''')
+    
+    # Create payments table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            payment_method TEXT DEFAULT 'card',
+            status TEXT DEFAULT 'pending',
+            transaction_id TEXT,
+            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (order_id) REFERENCES orders(id)
         )
     ''')
     
@@ -431,6 +454,129 @@ async def update_table_status(table_id: int, status: str):
         logger.error(f"❌ Error actualizando mesa {table_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating table status: {str(e)}")
 
+# Payment endpoints
+@app.get("/api/payments", response_model=List[Payment])
+async def get_payments():
+    """Get all payments"""
+    logger.info("💳 Obteniendo pagos")
+    try:
+        conn = sqlite3.connect('seatserve.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM payments ORDER BY timestamp DESC')
+        payments_data = cursor.fetchall()
+        conn.close()
+        
+        payments = []
+        for payment_data in payments_data:
+            payments.append(Payment(
+                id=payment_data[0],
+                order_id=payment_data[1],
+                amount=payment_data[2],
+                payment_method=payment_data[3],
+                status=payment_data[4],
+                transaction_id=payment_data[5],
+                timestamp=payment_data[6]
+            ))
+        
+        logger.info(f"✅ Pagos obtenidos: {len(payments)} pagos encontrados")
+        return payments
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching payments: {str(e)}")
+
+@app.post("/api/payments", response_model=Payment)
+async def create_payment(payment: Payment):
+    """Create a new payment"""
+    logger.info(f"💳 Nuevo pago recibido - Orden: {payment.order_id}, Monto: ${payment.amount}")
+    logger.info(f"📋 Método de pago: {payment.payment_method}")
+    try:
+        conn = sqlite3.connect('seatserve.db')
+        cursor = conn.cursor()
+        
+        # Verificar que la orden existe
+        cursor.execute('SELECT id FROM orders WHERE id = ?', (payment.order_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        timestamp = datetime.now().isoformat()
+        transaction_id = f"TXN-{payment.order_id}-{int(datetime.now().timestamp())}"
+        
+        cursor.execute('''
+            INSERT INTO payments (order_id, amount, payment_method, status, transaction_id, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (payment.order_id, payment.amount, payment.payment_method, 'pending', transaction_id, timestamp))
+        
+        payment_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        payment.id = payment_id
+        payment.status = 'pending'
+        payment.transaction_id = transaction_id
+        payment.timestamp = timestamp
+        logger.info(f"✅ Pago creado con ID: {payment_id}, Transacción: {transaction_id}")
+        return payment
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error creando pago: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating payment: {str(e)}")
+
+@app.put("/api/payments/{payment_id}/confirm")
+async def confirm_payment(payment_id: int):
+    """Confirm/Complete a payment"""
+    logger.info(f"✅ Confirmando pago {payment_id}")
+    try:
+        conn = sqlite3.connect('seatserve.db')
+        cursor = conn.cursor()
+        
+        # Verificar que el pago existe
+        cursor.execute('SELECT order_id FROM payments WHERE id = ?', (payment_id,))
+        payment_row = cursor.fetchone()
+        if not payment_row:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        order_id = payment_row[0]
+        
+        # Actualizar estado del pago a completado
+        cursor.execute('UPDATE payments SET status = ? WHERE id = ?', ('completed', payment_id))
+        
+        # Actualizar estado de la orden a pagada
+        cursor.execute('UPDATE orders SET status = ? WHERE id = ?', ('paid', order_id))
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"✅ Pago {payment_id} confirmado, Orden {order_id} marcada como pagada")
+        return {"message": f"Payment {payment_id} confirmed", "order_id": order_id, "status": "completed"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error confirmando pago: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error confirming payment: {str(e)}")
+
+@app.put("/api/payments/{payment_id}/reject")
+async def reject_payment(payment_id: int):
+    """Reject/Cancel a payment"""
+    logger.info(f"❌ Rechazando pago {payment_id}")
+    try:
+        conn = sqlite3.connect('seatserve.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('UPDATE payments SET status = ? WHERE id = ?', ('failed', payment_id))
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Payment not found")
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"✅ Pago {payment_id} rechazado")
+        return {"message": f"Payment {payment_id} rejected", "status": "failed"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error rechazando pago: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error rejecting payment: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
