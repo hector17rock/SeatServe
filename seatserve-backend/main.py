@@ -16,6 +16,12 @@ import json
 from datetime import datetime
 import uvicorn
 import logging
+import stripe
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -23,6 +29,10 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Configure Stripe
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -107,6 +117,10 @@ class Payment(BaseModel):
     status: str = "pending"  # pending, completed, failed
     transaction_id: Optional[str] = None
     timestamp: Optional[str] = None
+
+class StripePaymentIntent(BaseModel):
+    amount: float
+    order_data: dict
 
 # Database initialization
 def init_db():
@@ -577,6 +591,83 @@ async def reject_payment(payment_id: int):
     except Exception as e:
         logger.error(f"❌ Error rechazando pago: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error rejecting payment: {str(e)}")
+
+# Stripe endpoints
+@app.get("/api/stripe/config")
+async def get_stripe_config():
+    """Get Stripe publishable key for frontend"""
+    return {"publishableKey": STRIPE_PUBLISHABLE_KEY}
+
+@app.post("/api/stripe/create-payment-intent")
+async def create_payment_intent(payment_data: StripePaymentIntent):
+    """Create a Stripe Payment Intent"""
+    logger.info(f"💳 Creando Payment Intent de Stripe - Monto: ${payment_data.amount}")
+    try:
+        # Calculate amount in cents (Stripe requires integer cents)
+        amount_cents = int(payment_data.amount * 100)
+        
+        # Create Payment Intent
+        intent = stripe.PaymentIntent.create(
+            amount=amount_cents,
+            currency='usd',
+            automatic_payment_methods={
+                'enabled': True,
+            },
+            metadata={
+                'order_data': json.dumps(payment_data.order_data)
+            }
+        )
+        
+        logger.info(f"✅ Payment Intent creado: {intent.id}")
+        return {
+            "clientSecret": intent.client_secret,
+            "paymentIntentId": intent.id
+        }
+    except stripe.error.StripeError as e:
+        logger.error(f"❌ Error de Stripe: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ Error creando Payment Intent: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating payment intent: {str(e)}")
+
+@app.post("/api/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhooks"""
+    payload = await request.body()
+    sig_header = request.headers.get('stripe-signature')
+    
+    # Get webhook secret from environment
+    webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+    
+    try:
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, webhook_secret
+            )
+        else:
+            # For testing without webhook secret
+            event = json.loads(payload)
+        
+        logger.info(f"🔔 Webhook recibido: {event['type']}")
+        
+        # Handle the event
+        if event['type'] == 'payment_intent.succeeded':
+            payment_intent = event['data']['object']
+            logger.info(f"✅ Pago exitoso: {payment_intent['id']}")
+            # Here you would update your database with payment confirmation
+            
+        elif event['type'] == 'payment_intent.payment_failed':
+            payment_intent = event['data']['object']
+            logger.error(f"❌ Pago fallido: {payment_intent['id']}")
+            
+        return {"status": "success"}
+        
+    except stripe.error.SignatureVerificationError as e:
+        logger.error(f"❌ Error de verificación de firma: {str(e)}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    except Exception as e:
+        logger.error(f"❌ Error procesando webhook: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

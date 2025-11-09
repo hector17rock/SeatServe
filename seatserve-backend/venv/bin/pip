@@ -1,4 +1,4 @@
-#!/home/alejandro/SeatServe/seatserve-backend/venv/bin/python3
+#!/Users/hector/SeatServe/seatserve-backend/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys
