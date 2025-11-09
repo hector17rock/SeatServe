@@ -56,6 +56,14 @@ export default function SnacksMenuMVP() {
     localStorage.setItem('seatserve_orders', JSON.stringify(orders));
   }, [orders]);
 
+  // Check for flag to switch to order status tab (from confirmation page)
+  useEffect(() => {
+    if (localStorage.getItem('switch_to_concession') === 'true') {
+      setTab('Order Status');
+      localStorage.removeItem('switch_to_concession');
+    }
+  }, []);
+
   // ---- Dev Smoke Tests (run once in dev) ----
   useEffect(() => {
     const DEV = typeof import.meta !== "undefined" && import.meta.env && import.meta.env.DEV;
@@ -158,8 +166,8 @@ export default function SnacksMenuMVP() {
       createdAt: new Date().toISOString(),
     };
 
-    // Store order in localStorage and redirect to confirmation
-    localStorage.setItem('latest_order', JSON.stringify(newOrder));
+    // Store order as pending and redirect to checkout
+    localStorage.setItem('pending_order', JSON.stringify(newOrder));
     setOrders((prev) => [newOrder, ...prev]);
     clearCart();
     setNote("");
@@ -169,8 +177,8 @@ export default function SnacksMenuMVP() {
       setSeatNumber("");
     }
     
-    // Redirect to confirmation page
-    window.location.href = '/confirmation.html';
+    // Redirect to checkout page
+    window.location.href = '/checkout.html';
   }
 
 
@@ -440,7 +448,7 @@ export default function SnacksMenuMVP() {
                       <button
                         onClick={placeOrder}
                         className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-neutral-900 font-semibold hover:from-emerald-500 hover:to-cyan-500 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition duration-200"
-                      >Place Order</button>
+                      >Checkout</button>
                       <button
                         onClick={clearCart}
                         className="px-4 py-2 rounded-xl border border-neutral-300 hover:border-neutral-500"

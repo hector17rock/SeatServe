@@ -163,8 +163,8 @@ export default function SeatServeMVP() {
       createdAt: new Date().toISOString(),
     };
 
-    // Store order in localStorage and redirect to confirmation
-    localStorage.setItem('latest_order', JSON.stringify(newOrder));
+    // Store order as pending and redirect to checkout
+    localStorage.setItem('pending_order', JSON.stringify(newOrder));
     setOrders((prev) => [newOrder, ...prev]);
     clearCart();
     setNote("");
@@ -174,8 +174,8 @@ export default function SeatServeMVP() {
       setSeatNumber("");
     }
     
-    // Redirect to confirmation page
-    window.location.href = '/confirmation.html';
+    // Redirect to checkout page
+    window.location.href = '/checkout.html';
   }
 
   function advanceStatus(orderId) {
@@ -453,7 +453,7 @@ export default function SeatServeMVP() {
                       <button
                         onClick={placeOrder}
                         className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-neutral-900 font-semibold hover:from-emerald-500 hover:to-cyan-500 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition duration-200"
-                      >Place Order</button>
+                      >Checkout</button>
                       <button
                         onClick={clearCart}
                         className="px-4 py-2 rounded-xl border border-neutral-300 hover:border-neutral-500"

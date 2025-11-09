@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Images/seatserve-app-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - SeatServe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-white text-neutral-900 relative">
+    <!-- Index Wallpaper Background -->
+    <div 
+      class="fixed inset-0 pointer-events-none opacity-50"
+      style="
+        background-image: url('/Images/index-wallpaper.png');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        z-index: 1;
+      "
+    ></div>
+    <!-- Header -->
+    <header class="sticky top-0 z-20 backdrop-blur bg-white/70 border-b border-neutral-300">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-12 w-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+            <img src="/Images/seatserve-app-icon.png" alt="SeatServe Logo" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="text-xl font-semibold">SeatServe</div>
+            <div class="text-xs text-neutral-500">Order from your seat or pick up fast</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div class="text-sm text-neutral-600">
+              Welcome, <span class="font-medium" id="userName">Guest User</span>
+            </div>
+            <button
+              onclick="logout()"
+              class="px-3 py-1.5 rounded-lg text-sm bg-emerald-300 text-neutral-900 border border-emerald-300 hover:bg-emerald-400 hover:border-emerald-400 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-4xl px-4 py-8 relative z-10">
+      <!-- Page Title -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-neutral-900 mb-2">Checkout</h1>
+        <p class="text-neutral-600">Complete your payment to place your order</p>
+      </div>
+
+      <div class="grid md:grid-cols-5 gap-6">
+        <!-- Payment Form -->
+        <div class="md:col-span-3">
+          <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden shadow-sm">
+            <!-- Payment Header -->
+            <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-300">
+              <h2 class="text-lg font-semibold text-neutral-900">Payment Information</h2>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="px-6 py-6">
+              <form id="paymentForm">
+                <!-- Detected Card Type Display -->
+                <div class="mb-6">
+                  <label class="block text-sm font-semibold text-neutral-900 mb-3">Detected Card Type</label>
+                  <div class="flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-400 bg-emerald-50" id="detectedCardDisplay" style="display: none;">
+                    <div id="detectedCardIcon" class="h-8 w-12"></div>
+                    <span id="detectedCardName" class="text-sm font-medium text-neutral-900"></span>
+                  </div>
+                  <div class="p-4 rounded-xl border-2 border-neutral-300 bg-neutral-50 text-sm text-neutral-600" id="noCardDetected">
+                    Card type will be detected automatically when you enter your card number
+                  </div>
+                  <input type="hidden" id="cardType" name="cardType" required>
+                  <div id="cardTypeError" class="text-red-600 text-sm mt-1 hidden">Unable to detect card type. Please check your card number.</div>
+                </div>
+
+                <!-- Card Number -->
+                <div class="mb-4">
+                  <label for="cardNumber" class="block text-sm font-semibold text-neutral-900 mb-2">Card Number</label>
+                  <input
+                    type="text"
+                    id="cardNumber"
+                    name="cardNumber"
+                    placeholder="1234 5678 9012 3456"
+                    maxlength="19"
+                    class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                    required
+                  >
+                </div>
+
+                <!-- Cardholder Name -->
+                <div class="mb-4">
+                  <label for="cardName" class="block text-sm font-semibold text-neutral-900 mb-2">Cardholder Name</label>
+                  <input
+                    type="text"
+                    id="cardName"
+                    name="cardName"
+                    placeholder="John Doe"
+                    class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                    required
+                  >
+                </div>
+
+                <!-- Expiration Date and CVV -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <label for="expiryDate" class="block text-sm font-semibold text-neutral-900 mb-2">Expiration Date</label>
+                    <input
+                      type="text"
+                      id="expiryDate"
+                      name="expiryDate"
+                      placeholder="MM/YY"
+                      maxlength="5"
+                      class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                      required
+                    >
+                  </div>
+                  <div>
+                    <label for="cvv" class="block text-sm font-semibold text-neutral-900 mb-2">CVV</label>
+                    <input
+                      type="text"
+                      id="cvv"
+                      name="cvv"
+                      placeholder="123"
+                      maxlength="4"
+                      class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                      required
+                    >
+                  </div>
+                </div>
+
+                <!-- Billing Address -->
+                <div class="mb-4">
+                  <label for="billingAddress" class="block text-sm font-semibold text-neutral-900 mb-2">Billing Address</label>
+                  <input
+                    type="text"
+                    id="billingAddress"
+                    name="billingAddress"
+                    placeholder="123 Main St"
+                    class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                    required
+                  >
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label for="city" class="block text-sm font-semibold text-neutral-900 mb-2">City</label>
+                    <input
+                      type="text"
+                      id="city"
+                      name="city"
+                      placeholder="New York"
+                      class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                      required
+                    >
+                  </div>
+                  <div>
+                    <label for="state" class="block text-sm font-semibold text-neutral-900 mb-2">State</label>
+                    <input
+                      type="text"
+                      id="state"
+                      name="state"
+                      placeholder="NY"
+                      maxlength="2"
+                      class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                      required
+                    >
+                  </div>
+                  <div>
+                    <label for="zipCode" class="block text-sm font-semibold text-neutral-900 mb-2">ZIP Code</label>
+                    <input
+                      type="text"
+                      id="zipCode"
+                      name="zipCode"
+                      placeholder="10001"
+                      maxlength="5"
+                      class="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-20 outline-none transition"
+                      required
+                    >
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button
+                  type="submit"
+                  class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-neutral-900 font-semibold hover:from-emerald-500 hover:to-cyan-500 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition duration-200"
+                  id="submitBtn"
+                >
+                  Complete Payment
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="md:col-span-2">
+          <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden shadow-sm sticky top-24">
+            <!-- Summary Header -->
+            <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-300">
+              <h2 class="text-lg font-semibold text-neutral-900">Order Summary</h2>
+            </div>
+
+            <!-- Order Items -->
+            <div class="px-6 py-4">
+              <div class="space-y-3 mb-4" id="orderItems">
+                <!-- Items will be populated by JavaScript -->
+                <div class="text-center py-4 text-neutral-500 text-sm">
+                  Loading order details...
+                </div>
+              </div>
+
+              <!-- Totals -->
+              <div class="pt-4 border-t border-neutral-300 space-y-2">
+                <div class="flex items-center justify-between text-sm text-neutral-600">
+                  <span>Subtotal</span>
+                  <span id="subtotal">$0.00</span>
+                </div>
+                <div class="flex items-center justify-between text-sm text-neutral-600">
+                  <span>Tax (7%)</span>
+                  <span id="tax">$0.00</span>
+                </div>
+                <div class="flex items-center justify-between text-lg font-bold text-neutral-900 pt-2 border-t border-neutral-300">
+                  <span>Total</span>
+                  <span id="total">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-6xl px-4 pb-10 pt-8 text-xs text-neutral-500">
+      <div class="text-center">Demo MVP | SeatServe All Rights Reserve 2025</div>
+    </footer>
+
+    <script>
+      // Currency formatting function
+      function currency(n) {
+        return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+      }
+
+      let selectedCardType = null;
+
+      // Set user name from localStorage
+      document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('seatserve_user') || 'Guest User';
+        document.getElementById('userName').textContent = userName;
+
+        // Load order details from localStorage
+        loadOrderSummary();
+      });
+
+      // Function to detect card type from card number
+      function detectCardType(cardNumber) {
+        // Remove spaces and non-digits
+        const number = cardNumber.replace(/\D/g, '');
+        
+        // Check if number is long enough
+        if (number.length < 4) {
+          return null;
+        }
+
+        // Visa: starts with 4
+        if (/^4/.test(number)) {
+          return 'visa';
+        }
+        
+        // Mastercard: starts with 51-55 or 2221-2720
+        if (/^5[1-5]/.test(number) || /^2(2(2[1-9]|[3-9])|[3-6]|7([0-1]|20))/.test(number)) {
+          return 'mastercard';
+        }
+        
+        // American Express: starts with 34 or 37
+        if (/^3[47]/.test(number)) {
+          return 'amex';
+        }
+        
+        // Discover: starts with 6011, 622126-622925, 644-649, or 65
+        if (/^6011|^622(1(2[6-9]|[3-9])|[2-8]|9([0-1]|2[0-5]))|^64[4-9]|^65/.test(number)) {
+          return 'discover';
+        }
+        
+        return null;
+      }
+
+      function updateCardTypeDisplay(type) {
+        selectedCardType = type;
+        document.getElementById('cardType').value = type || '';
+        
+        const detectedDisplay = document.getElementById('detectedCardDisplay');
+        const noCardDetected = document.getElementById('noCardDetected');
+        const detectedIcon = document.getElementById('detectedCardIcon');
+        const detectedName = document.getElementById('detectedCardName');
+        
+        if (type) {
+          // Show detected card
+          detectedDisplay.style.display = 'flex';
+          noCardDetected.style.display = 'none';
+          
+          // Set card name
+          const cardNames = {
+            'visa': 'Visa',
+            'mastercard': 'Mastercard',
+            'amex': 'American Express',
+            'discover': 'Discover'
+          };
+          detectedName.textContent = cardNames[type];
+          
+          // Set card icon
+          if (type === 'visa') {
+            detectedIcon.innerHTML = `
+              <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+                <rect width="48" height="32" rx="4" fill="#1A1F71"/>
+                <text x="50%" y="50%" font-size="12" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">VISA</text>
+              </svg>
+            `;
+          } else if (type === 'mastercard') {
+            detectedIcon.innerHTML = `
+              <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+                <rect width="48" height="32" rx="4" fill="#EB001B"/>
+                <circle cx="18" cy="16" r="8" fill="#FF5F00"/>
+                <circle cx="30" cy="16" r="8" fill="#F79E1B"/>
+              </svg>
+            `;
+          } else if (type === 'amex') {
+            detectedIcon.innerHTML = `
+              <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+                <rect width="48" height="32" rx="4" fill="#006FCF"/>
+                <text x="50%" y="50%" font-size="10" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">AMEX</text>
+              </svg>
+            `;
+          } else if (type === 'discover') {
+            detectedIcon.innerHTML = `
+              <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+                <rect width="48" height="32" rx="4" fill="#FF6000"/>
+                <text x="50%" y="50%" font-size="8" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">DISCOVER</text>
+              </svg>
+            `;
+          }
+          
+          document.getElementById('cardTypeError').classList.add('hidden');
+        } else {
+          // Show placeholder
+          detectedDisplay.style.display = 'none';
+          noCardDetected.style.display = 'block';
+        }
+      }
+
+      function loadOrderSummary() {
+        // Get pending order from localStorage
+        const orderData = localStorage.getItem('pending_order');
+        
+        if (orderData) {
+          const order = JSON.parse(orderData);
+          displayOrderSummary(order);
+        } else {
+          document.getElementById('orderItems').innerHTML = `
+            <div class="text-center py-4 text-red-500 text-sm">
+              <p>No order found.</p>
+              <p class="text-xs text-neutral-500 mt-1">Please go back and create an order.</p>
+            </div>
+          `;
+        }
+      }
+
+      function displayOrderSummary(order) {
+        // Display order items
+        const itemsHtml = order.items.map(item => `
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2">
+              <span class="text-neutral-700">${item.name}</span>
+              <span class="text-neutral-500">× ${item.qty}</span>
+            </div>
+            <span class="font-medium">${currency(item.price * item.qty)}</span>
+          </div>
+        `).join('');
+        
+        document.getElementById('orderItems').innerHTML = itemsHtml;
+
+        // Calculate totals
+        const subtotal = order.total;
+        const tax = subtotal * 0.07;
+        const total = subtotal + tax;
+
+        document.getElementById('subtotal').textContent = currency(subtotal);
+        document.getElementById('tax').textContent = currency(tax);
+        document.getElementById('total').textContent = currency(total);
+      }
+
+      // Card number formatting and auto-detection
+      document.getElementById('cardNumber').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s/g, '');
+        let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+        e.target.value = formattedValue;
+        
+        // Detect card type
+        const cardType = detectCardType(value);
+        updateCardTypeDisplay(cardType);
+      });
+
+      // Expiry date formatting
+      document.getElementById('expiryDate').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+          value = value.slice(0, 2) + '/' + value.slice(2, 4);
+        }
+        e.target.value = value;
+      });
+
+      // CVV - numbers only
+      document.getElementById('cvv').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+      });
+
+      // ZIP code - numbers only
+      document.getElementById('zipCode').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+      });
+
+      // State - uppercase
+      document.getElementById('state').addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase();
+      });
+
+      // Form submission
+      document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate card type was detected
+        if (!selectedCardType) {
+          document.getElementById('cardTypeError').classList.remove('hidden');
+          document.getElementById('cardNumber').focus();
+          return;
+        }
+
+        // Show processing state
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing Payment...';
+        submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+
+        // Simulate payment processing
+        setTimeout(() => {
+          // Get pending order and add payment info
+          const orderData = localStorage.getItem('pending_order');
+          if (orderData) {
+            const order = JSON.parse(orderData);
+            
+            // Add payment info to order
+            order.paymentMethod = selectedCardType;
+            order.paymentStatus = 'Completed';
+            
+            // Update pending order with payment info
+            localStorage.setItem('pending_order', JSON.stringify(order));
+            
+            // Redirect to order review page
+            window.location.href = '/order_review.html';
+          } else {
+            alert('Error: No order found. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Complete Payment';
+            submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+          }
+        }, 2000);
+      });
+
+      // Logout function
+      function logout() {
+        localStorage.removeItem('seatserve_logged_in');
+        localStorage.removeItem('seatserve_user');
+        localStorage.removeItem('selected_concession_id');
+        localStorage.removeItem('selected_concession_name');
+        localStorage.removeItem('latest_order');
+        localStorage.removeItem('pending_order');
+        window.location.href = '/';
+      }
+
+      // Check if user is logged in
+      if (!localStorage.getItem('seatserve_logged_in')) {
+        window.location.href = '/';
+      }
+    </script>
+  </body>
+</html>
