@@ -2,6 +2,12 @@
 
 This directory contains Django model definitions for the SeatServe payment system. This is a **separate** backend from the main FastAPI application.
 
+## Author
+
+**Alejandro Garcia**  
+Backend Software Engineer  
+GitHub: [@GerAle30](https://github.com/GerAle30)
+
 ## Directory Structure
 
 ```
