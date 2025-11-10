@@ -6,11 +6,15 @@
 
 A modern, responsive web application for stadium and venue food ordering with seat delivery and pickup options. Built with Vite, Tailwind CSS, and integrated with Stripe payment processing.
 
-## Author
+## Authors
 
 **Héctor Soto**  
 Frontend Software Engineer  
 GitHub: [@hector17rock](https://github.com/hector17rock)
+
+**Alejandro Garcia**  
+Backend Software Engineer  
+GitHub: [@GerAle30](https://github.com/GerAle30)
 
 ## Overview
 
@@ -377,4 +381,4 @@ For issues or questions:
 
 **Status:** ✅ **COMPLETED**
 
-Built with ❤️ by Héctor Soto
+Built with ❤️ by Héctor Soto & Alejandro Garcia

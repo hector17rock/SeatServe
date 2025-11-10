@@ -6,7 +6,11 @@
 
 This directory contains Django model definitions for the SeatServe payment system. This is a **separate** backend from the main FastAPI application.
 
-## Author
+## Authors
+
+**Héctor Soto**  
+Frontend Software Engineer  
+GitHub: [@hector17rock](https://github.com/hector17rock)
 
 **Alejandro Garcia**  
 Backend Software Engineer  
@@ -138,6 +142,203 @@ If migrating to Django:
 5. Run migrations
 6. Update frontend to use new endpoints
 
+## Model Field Reference
+
+### Payment Model Fields
+
+#### Relationships
+- `order` - OneToOne link to Order model
+- `user` - ForeignKey to Django User model (nullable)
+
+#### Stripe Fields
+- `stripe_payment_intent_id` - Unique Stripe Payment Intent ID
+- `stripe_charge_id` - Unique Stripe Charge ID (nullable)
+- `stripe_customer_id` - Stripe Customer ID for recurring customers
+
+#### Financial Fields
+- `amount` - Payment amount (Decimal, 10 digits, 2 decimal places)
+- `currency` - Currency code (default: USD, 3 characters)
+- `refund_amount` - Total amount refunded (Decimal, default: 0)
+
+#### Payment Information
+- `payment_method` - Payment method used (card, paypal, apple_pay, google_pay)
+- `status` - Payment status (pending, succeeded, failed, canceled, refunded)
+
+#### Card Information
+- `card_last_four` - Last 4 digits of card number
+- `card_brand` - Card brand (visa, mastercard, amex, discover)
+- `card_exp_month` - Card expiration month (1-12)
+- `card_exp_year` - Card expiration year (4 digits)
+
+#### Metadata
+- `description` - Payment description
+- `receipt_url` - URL to Stripe receipt
+- `receipt_email` - Email where receipt was sent
+- `refund_reason` - Reason for refund (if applicable)
+
+#### Timestamps
+- `created_at` - When payment record was created (auto)
+- `updated_at` - Last update timestamp (auto)
+- `paid_at` - When payment was successfully completed
+- `refunded_at` - When refund was processed (if applicable)
+
+### PaymentLog Model Fields
+
+- `payment` - ForeignKey to Payment model
+- `event_type` - Type of event logged (choices from EVENTS)
+- `data` - Complete JSON data from Stripe webhook/response
+- `error_message` - Error message if event_type is 'error'
+- `created_at` - Timestamp of log entry (auto)
+
+## Code Examples
+
+### Creating a Payment Record
+
+```python
+from app.models.payment import Payment
+from decimal import Decimal
+
+payment = Payment.objects.create(
+    order=order_instance,
+    user=user_instance,
+    stripe_payment_intent_id="pi_1234567890",
+    amount=Decimal('25.99'),
+    currency='USD',
+    payment_method='card',
+    status='pending'
+)
+```
+
+### Logging Payment Events
+
+```python
+from app.models.payment import PaymentLog
+
+PaymentLog.objects.create(
+    payment=payment_instance,
+    event_type='intent_created',
+    data=stripe_response_data
+)
+```
+
+### Querying Payments
+
+```python
+# Get all successful payments for a user
+successful_payments = Payment.objects.filter(
+    user=user_instance,
+    status='succeeded'
+)
+
+# Get all payments that can be refunded
+refundable = Payment.objects.filter(
+    status='succeeded',
+    refund_amount=0
+)
+
+# Get payment with all logs
+payment = Payment.objects.prefetch_related('logs').get(id=payment_id)
+for log in payment.logs.all():
+    print(f"{log.event_type}: {log.created_at}")
+```
+
+## Database Schema SQL
+
+### Payment Table
+```sql
+CREATE TABLE payment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL UNIQUE,
+    user_id INTEGER,
+    stripe_payment_intent_id VARCHAR(255) UNIQUE NOT NULL,
+    stripe_charge_id VARCHAR(255) UNIQUE,
+    stripe_customer_id VARCHAR(255),
+    amount DECIMAL(10, 2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    payment_method VARCHAR(20) DEFAULT 'card',
+    status VARCHAR(20) DEFAULT 'pending',
+    card_last_four VARCHAR(4),
+    card_brand VARCHAR(50),
+    card_exp_month INTEGER,
+    card_exp_year INTEGER,
+    description TEXT,
+    receipt_url TEXT,
+    receipt_email VARCHAR(254),
+    refund_amount DECIMAL(10, 2) DEFAULT 0,
+    refund_reason VARCHAR(255),
+    refunded_at DATETIME,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    paid_at DATETIME,
+    FOREIGN KEY (order_id) REFERENCES order(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES auth_user(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_payment_user_created ON payment(user_id, created_at DESC);
+CREATE INDEX idx_payment_status ON payment(status);
+CREATE INDEX idx_payment_intent ON payment(stripe_payment_intent_id);
+```
+
+### PaymentLog Table
+```sql
+CREATE TABLE payment_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    payment_id INTEGER NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
+    data JSON DEFAULT '{}',
+    error_message TEXT,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_paymentlog_created ON payment_log(created_at DESC);
+```
+
+## Integration with Stripe Webhooks
+
+While not currently implemented, here's how these models would integrate with Stripe webhooks:
+
+### Webhook Handler Example
+
+```python
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import stripe
+import json
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+        
+        # Handle payment_intent.succeeded
+        if event['type'] == 'payment_intent.succeeded':
+            intent = event['data']['object']
+            payment = Payment.objects.get(
+                stripe_payment_intent_id=intent['id']
+            )
+            payment.status = 'succeeded'
+            payment.paid_at = timezone.now()
+            payment.save()
+            
+            # Log the event
+            PaymentLog.objects.create(
+                payment=payment,
+                event_type='intent_succeeded',
+                data=event['data']['object']
+            )
+        
+        return JsonResponse({'status': 'success'})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+```
+
 ## Development Status
 
 **Status:** ✅ **COMPLETED**
@@ -146,9 +347,17 @@ If migrating to Django:
 - ✅ Payment model implementation complete
 - ✅ PaymentLog model for audit trail
 - ✅ Database optimization with indexes
+- ✅ Comprehensive field documentation
+- ✅ Code examples and SQL schemas
 - ❌ Not integrated with active application (Django models for future use)
 - ❌ No Django project configured
 - ❌ No migrations created
+
+---
+
+**Status:** ✅ **COMPLETED**
+
+Built with ❤️ by Héctor Soto & Alejandro Garcia
 
 ---
 
