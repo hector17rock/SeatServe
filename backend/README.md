@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../Frontend/public/Images/seatserve-app-icon.png" alt="SeatServe Logo" width="120" height="120">
+</div>
+
 # SeatServe Backend (Django Models)
 
 This directory contains Django model definitions for the SeatServe payment system. This is a **separate** backend from the main FastAPI application.
