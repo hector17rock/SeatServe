@@ -36,7 +36,9 @@ export default function IceCreamMenuMVP() {
   const [station, setStation] = useState("All");
   const [cart, setCart] = useState({}); // id -> qty
   const [fulfillment, setFulfillment] = useState("Pickup"); // "Pickup" | "Seat Delivery"
-  const [seat, setSeat] = useState("");
+  const [seatSection, setSeatSection] = useState("");
+  const [seatRow, setSeatRow] = useState("");
+  const [seatNumber, setSeatNumber] = useState("");
   const [note, setNote] = useState("");
 
   // Shared orders list (persisted in localStorage)
@@ -49,6 +51,14 @@ export default function IceCreamMenuMVP() {
   useEffect(() => {
     localStorage.setItem('seatserve_orders', JSON.stringify(orders));
   }, [orders]);
+
+  // Check for flag to switch to order status tab (from confirmation page)
+  useEffect(() => {
+    if (localStorage.getItem('switch_to_concession') === 'true') {
+      setTab('Order Status');
+      localStorage.removeItem('switch_to_concession');
+    }
+  }, []);
 
   // ---- Dev Smoke Tests (run once in dev) ----
   useEffect(() => {
@@ -127,34 +137,44 @@ export default function IceCreamMenuMVP() {
 
   function placeOrder() {
     if (!cartEntries.length) return;
-    if (fulfillment === "Seat Delivery" && !seat.trim()) return alert("Please enter your seat number for delivery.");
+    if (fulfillment === "Seat Delivery" && (!seatSection.trim() || !seatRow.trim() || !seatNumber.trim())) {
+      return alert("Please enter your complete seat location (Section, Row, and Seat).");
+    }
 
     const snapshot = cartEntries.map(([id, qty]) => {
       const item = CATALOG.find((i) => i.id === id);
       return { id, name: item?.name || id, price: item?.price || 0, qty };
     });
 
+    const seatLocation = fulfillment === "Seat Delivery" 
+      ? `Section ${seatSection.trim()}, Row ${seatRow.trim()}, Seat ${seatNumber.trim()}`
+      : null;
+
     const newOrder = {
       id: `ORD-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
       items: snapshot,
       total: snapshot.reduce((s, it) => s + it.price * it.qty, 0),
       fulfillment,
-      seat: fulfillment === "Seat Delivery" ? seat.trim() : null,
+      seat: seatLocation,
       note: note.trim() || null,
       status: "Queued",
       concession: concessionName,
       createdAt: new Date().toISOString(),
     };
 
-    // Store order in localStorage and redirect to confirmation
-    localStorage.setItem('latest_order', JSON.stringify(newOrder));
+    // Store order as pending and redirect to checkout
+    localStorage.setItem('pending_order', JSON.stringify(newOrder));
     setOrders((prev) => [newOrder, ...prev]);
     clearCart();
     setNote("");
-    if (fulfillment === "Seat Delivery") setSeat("");
+    if (fulfillment === "Seat Delivery") {
+      setSeatSection("");
+      setSeatRow("");
+      setSeatNumber("");
+    }
     
-    // Redirect to confirmation page
-    window.location.href = '/confirmation.html';
+    // Redirect to checkout page
+    window.location.href = '/checkout.html';
   }
 
 
@@ -294,13 +314,38 @@ export default function IceCreamMenuMVP() {
                   ))}
                 </div>
                 {fulfillment === "Seat Delivery" && (
-                  <input
-                    type="text"
-                    value={seat}
-                    onChange={(e) => setSeat(e.target.value)}
-                    placeholder="Section 104, Row F, Seat 12"
-                    className="mt-3 w-full rounded-xl bg-white border border-neutral-300 px-3 py-2"
-                  />
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="text-sm text-neutral-700 mb-1 block">Section</label>
+                      <input
+                        type="text"
+                        value={seatSection}
+                        onChange={(e) => setSeatSection(e.target.value)}
+                        placeholder="104"
+                        className="w-full rounded-xl bg-white border border-neutral-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-neutral-700 mb-1 block">Row</label>
+                      <input
+                        type="text"
+                        value={seatRow}
+                        onChange={(e) => setSeatRow(e.target.value)}
+                        placeholder="F"
+                        className="w-full rounded-xl bg-white border border-neutral-300 px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-neutral-700 mb-1 block">Seat</label>
+                      <input
+                        type="text"
+                        value={seatNumber}
+                        onChange={(e) => setSeatNumber(e.target.value)}
+                        placeholder="12"
+                        className="w-full rounded-xl bg-white border border-neutral-300 px-3 py-2"
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </aside>
@@ -399,7 +444,7 @@ export default function IceCreamMenuMVP() {
                       <button
                         onClick={placeOrder}
                         className="px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-neutral-900 font-semibold hover:from-emerald-500 hover:to-cyan-500 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition duration-200"
-                      >Place Order</button>
+                      >Checkout</button>
                       <button
                         onClick={clearCart}
                         className="px-4 py-2 rounded-xl border border-neutral-300 hover:border-neutral-500"
@@ -493,7 +538,7 @@ export default function IceCreamMenuMVP() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-neutral-500">
-        <div>Demo MVP • In-memory only • No backend required</div>
+        <div>Demo MVP | SeatServe All Rights Reserve 2025</div>
       </footer>
     </div>
   );

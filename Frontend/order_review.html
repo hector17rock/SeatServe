@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Images/seatserve-app-icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Review Order - SeatServe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-white text-neutral-900 relative">
+    <!-- Index Wallpaper Background -->
+    <div 
+      class="fixed inset-0 pointer-events-none opacity-50"
+      style="
+        background-image: url('/Images/index-wallpaper.png');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        z-index: 1;
+      "
+    ></div>
+    <!-- Header -->
+    <header class="sticky top-0 z-20 backdrop-blur bg-white/70 border-b border-neutral-300">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-12 w-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+            <img src="/Images/seatserve-app-icon.png" alt="SeatServe Logo" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="text-xl font-semibold">SeatServe</div>
+            <div class="text-xs text-neutral-500">Order from your seat or pick up fast</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <div class="text-sm text-neutral-600">
+              Welcome, <span class="font-medium" id="userName">Guest User</span>
+            </div>
+            <button
+              onclick="logout()"
+              class="px-3 py-1.5 rounded-lg text-sm bg-emerald-300 text-neutral-900 border border-emerald-300 hover:bg-emerald-400 hover:border-emerald-400 transition"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-4xl px-4 py-8 relative z-10">
+      <!-- Page Title -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-neutral-900 mb-2">Review Your Order</h1>
+        <p class="text-neutral-600">Please review your order details before placing</p>
+      </div>
+
+      <!-- Order Review Card -->
+      <div class="rounded-2xl border border-neutral-300 bg-white overflow-hidden shadow-sm mb-6">
+        <!-- Payment & Delivery Info Header -->
+        <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-300">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-neutral-900 mb-2">Payment Method</h3>
+              <div class="flex items-center gap-2">
+                <div id="paymentIcon" class="h-8 w-12"></div>
+                <span id="paymentMethod" class="text-sm text-neutral-700 capitalize">Loading...</span>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-neutral-900 mb-2">Fulfillment</h3>
+              <div id="fulfillmentInfo" class="text-sm text-neutral-700">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="px-6 py-6">
+          <h3 class="font-semibold mb-4">Order Items</h3>
+          <div class="space-y-3" id="orderItems">
+            <!-- Items will be populated by JavaScript -->
+            <div class="text-center py-4 text-neutral-500 text-sm">
+              Loading order details...
+            </div>
+          </div>
+
+          <!-- Order Note -->
+          <div class="mt-4" id="orderNoteSection" style="display: none;">
+            <h4 class="text-sm font-semibold text-neutral-900 mb-2">Special Instructions</h4>
+            <div class="text-sm text-neutral-600 italic" id="orderNote"></div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-neutral-50 px-6 py-4 border-t border-neutral-300">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-neutral-600">
+              <span>Subtotal</span>
+              <span id="subtotal">$0.00</span>
+            </div>
+            <div class="flex items-center justify-between text-sm text-neutral-600">
+              <span>Tax (7%)</span>
+              <span id="tax">$0.00</span>
+            </div>
+            <div class="flex items-center justify-between text-lg font-bold text-neutral-900 pt-2 border-t border-neutral-300">
+              <span>Total</span>
+              <span id="total">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-center gap-4">
+        <button
+          onclick="goBackToCheckout()"
+          class="px-6 py-3 rounded-xl border border-neutral-300 hover:border-neutral-500 text-neutral-700 font-medium transition"
+        >
+          Back to Checkout
+        </button>
+        <button
+          onclick="placeOrder()"
+          class="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-neutral-900 font-semibold hover:from-emerald-500 hover:to-cyan-500 focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition duration-200"
+          id="placeOrderBtn"
+        >
+          Place Order
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-6xl px-4 pb-10 pt-8 text-xs text-neutral-500">
+      <div class="text-center">Demo MVP | SeatServe All Rights Reserve 2025</div>
+    </footer>
+
+    <script>
+      // Currency formatting function
+      function currency(n) {
+        return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+      }
+
+      let orderData = null;
+
+      // Set user name from localStorage
+      document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('seatserve_user') || 'Guest User';
+        document.getElementById('userName').textContent = userName;
+
+        // Load order details from localStorage
+        loadOrderReview();
+      });
+
+      function loadOrderReview() {
+        // Get pending order from localStorage
+        const pendingOrder = localStorage.getItem('pending_order');
+        
+        if (pendingOrder) {
+          orderData = JSON.parse(pendingOrder);
+          displayOrderReview(orderData);
+        } else {
+          document.getElementById('orderItems').innerHTML = `
+            <div class="text-center py-8 text-red-500 text-sm">
+              <p>No order found.</p>
+              <p class="text-xs text-neutral-500 mt-2">Please go back and create an order.</p>
+            </div>
+          `;
+        }
+      }
+
+      function displayOrderReview(order) {
+        // Display payment method
+        const paymentMethod = order.paymentMethod || 'Not specified';
+        document.getElementById('paymentMethod').textContent = paymentMethod;
+        
+        // Display payment icon
+        const paymentIcon = document.getElementById('paymentIcon');
+        if (paymentMethod === 'visa') {
+          paymentIcon.innerHTML = `
+            <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#1A1F71"/>
+              <text x="50%" y="50%" font-size="12" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">VISA</text>
+            </svg>
+          `;
+        } else if (paymentMethod === 'mastercard') {
+          paymentIcon.innerHTML = `
+            <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#EB001B"/>
+              <circle cx="18" cy="16" r="8" fill="#FF5F00"/>
+              <circle cx="30" cy="16" r="8" fill="#F79E1B"/>
+            </svg>
+          `;
+        } else if (paymentMethod === 'amex') {
+          paymentIcon.innerHTML = `
+            <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#006FCF"/>
+              <text x="50%" y="50%" font-size="10" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">AMEX</text>
+            </svg>
+          `;
+        } else if (paymentMethod === 'discover') {
+          paymentIcon.innerHTML = `
+            <svg class="h-8 w-12" viewBox="0 0 48 32" fill="none">
+              <rect width="48" height="32" rx="4" fill="#FF6000"/>
+              <text x="50%" y="50%" font-size="8" fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">DISCOVER</text>
+            </svg>
+          `;
+        }
+
+        // Display fulfillment info
+        const fulfillmentInfo = document.getElementById('fulfillmentInfo');
+        if (order.fulfillment === 'Pickup') {
+          fulfillmentInfo.textContent = 'Pickup at counter when ready';
+        } else {
+          fulfillmentInfo.textContent = order.seat || 'Seat delivery';
+        }
+
+        // Display order items with add/remove functionality
+        const itemsHtml = order.items.map((item, index) => `
+          <div class="flex items-center justify-between py-3 border-b border-neutral-200">
+            <div class="flex-1">
+              <div class="font-medium text-neutral-900">${item.name}</div>
+              <div class="text-sm text-neutral-600">${currency(item.price)} each</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <button
+                  onclick="decreaseQuantity(${index})"
+                  class="h-8 w-8 rounded-lg border border-neutral-300 hover:border-neutral-500 hover:bg-neutral-50 transition"
+                  aria-label="Decrease quantity"
+                >−</button>
+                <span class="min-w-8 text-center font-medium">${item.qty}</span>
+                <button
+                  onclick="increaseQuantity(${index})"
+                  class="h-8 w-8 rounded-lg border border-neutral-300 hover:border-neutral-500 hover:bg-neutral-50 transition"
+                  aria-label="Increase quantity"
+                >＋</button>
+              </div>
+              <div class="min-w-20 text-right font-semibold">${currency(item.price * item.qty)}</div>
+              <button
+                onclick="removeItem(${index})"
+                class="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 border border-red-300 hover:border-red-500 transition"
+              >Remove</button>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('orderItems').innerHTML = itemsHtml;
+
+        // Display order note if exists
+        if (order.note) {
+          document.getElementById('orderNoteSection').style.display = 'block';
+          document.getElementById('orderNote').textContent = order.note;
+        }
+
+        // Update totals
+        updateTotals();
+      }
+
+      function updateTotals() {
+        const subtotal = orderData.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const tax = subtotal * 0.07;
+        const total = subtotal + tax;
+
+        document.getElementById('subtotal').textContent = currency(subtotal);
+        document.getElementById('tax').textContent = currency(tax);
+        document.getElementById('total').textContent = currency(total);
+
+        // Update order total
+        orderData.total = subtotal;
+      }
+
+      function increaseQuantity(index) {
+        orderData.items[index].qty += 1;
+        localStorage.setItem('pending_order', JSON.stringify(orderData));
+        displayOrderReview(orderData);
+      }
+
+      function decreaseQuantity(index) {
+        if (orderData.items[index].qty > 1) {
+          orderData.items[index].qty -= 1;
+          localStorage.setItem('pending_order', JSON.stringify(orderData));
+          displayOrderReview(orderData);
+        } else {
+          // If quantity would go to 0, remove the item
+          removeItem(index);
+        }
+      }
+
+      function removeItem(index) {
+        if (orderData.items.length === 1) {
+          alert('You must have at least one item in your order.');
+          return;
+        }
+
+        if (confirm('Are you sure you want to remove this item?')) {
+          orderData.items.splice(index, 1);
+          localStorage.setItem('pending_order', JSON.stringify(orderData));
+          displayOrderReview(orderData);
+        }
+      }
+
+      function goBackToCheckout() {
+        window.location.href = '/checkout.html';
+      }
+
+      function placeOrder() {
+        if (!orderData || !orderData.items || orderData.items.length === 0) {
+          alert('Your order is empty. Please add items before placing your order.');
+          return;
+        }
+
+        // Show processing state
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.textContent = 'Placing Order...';
+        placeOrderBtn.classList.add('opacity-70', 'cursor-not-allowed');
+
+        // Simulate order placement
+        setTimeout(() => {
+          // Move pending order to latest order
+          localStorage.setItem('latest_order', JSON.stringify(orderData));
+          localStorage.removeItem('pending_order');
+
+          // Redirect to confirmation page
+          window.location.href = '/confirmation.html';
+        }, 1500);
+      }
+
+      // Logout function
+      function logout() {
+        localStorage.removeItem('seatserve_logged_in');
+        localStorage.removeItem('seatserve_user');
+        localStorage.removeItem('selected_concession_id');
+        localStorage.removeItem('selected_concession_name');
+        localStorage.removeItem('latest_order');
+        localStorage.removeItem('pending_order');
+        window.location.href = '/';
+      }
+
+      // Check if user is logged in
+      if (!localStorage.getItem('seatserve_logged_in')) {
+        window.location.href = '/';
+      }
+    </script>
+  </body>
+</html>
