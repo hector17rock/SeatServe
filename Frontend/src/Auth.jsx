@@ -32,11 +32,11 @@ export default function Auth() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="h-16 w-16 rounded-2xl overflow-hidden shadow-lg">
+          <div className="h-16 w-16">
             <img 
               src="/Images/seatserve-app-icon.png" 
               alt="SeatServe Logo" 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-contain" 
             />
           </div>
         </div>
